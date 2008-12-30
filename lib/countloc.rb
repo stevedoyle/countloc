@@ -109,11 +109,17 @@ end
 
 # When run as a standalone script ...
 if $0 == __FILE__:
-  usage = "Usage: #{$0} [-h --help] <file>"
+  usage = "Usage: #{File.basename($0)} [-h --help] <file>"
 
   options = {}  
   OptionParser.new do |opts|
     opts.banner = usage
+    
+    opts.on_tail('-h', '--help', 'display this help and exit') do
+      puts opts
+      exit
+    end
+    
   end.parse!
 
   if ARGV.length < 1
