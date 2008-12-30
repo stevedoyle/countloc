@@ -26,7 +26,7 @@ Gem:
 	ruby gem install countloc.gem
 	
 zip:
-	unzlip countloc.zip
+	unzip countloc.zip
  
 
 3. Usage
