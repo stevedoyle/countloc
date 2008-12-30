@@ -16,73 +16,86 @@
 
 require 'optparse'
 
-class CountLocPatterns
-  attr_reader :single_line_full   # Entire line is a single line comment
-  attr_reader :single_line_mixed  # Mixed code and comment on same line
-  attr_reader :multi_line_begin   # Beginning of a multi-line comment
-  attr_reader :multi_line_end     # End of a multi-line comment
+# Class that gathers the metrics. 
+# This class design & implementation is based heavily on Stefan Lang's 
+# ScriptLines class from the "Ruby Cookbook" - Section 19.5 "Gathering 
+# Statistics About Your Code".
+class LineCounter
+  attr_reader :name
+  attr_accessor :code, :comments, :blank, :lines
   
-  def initialize
-    @single_line_full = /^\s*#/
-    @single_line_mixed = /#/
-    @multi_line_begin = /=begin/
-    @multi_line_end = /=end/
-  end
-end
+  SINGLE_LINE_FULL_PATTERN = /^\s*#/
+  SINGLE_LINE_MIXED_PATTERN = /#/
+  MULTI_LINE_BEGIN_PATTERN = /=begin(\s|$)/
+  MULTI_LINE_END_PATTERN = /=end(\s|$)/
+  BLANK_LINE_PATTERN = /^\s*$/
 
-# Get the lines of code (LOC) metrics for the specified filename(s).
-# Returns: Metrics in the form of a hash of name-value pairs.
-def countloc(filename)
-  stats = { 'comments'=>0, 'code'=>0, 'blank'=>0, 'total'=>0 }
-  patterns = CountLocPatterns.new
-  isMultilineOpen = false
+  LINE_FORMAT = '%-20s %8s %8s %8s %8s'
+
+  def self.headline
+    sprintf LINE_FORMAT, "FILE", "LOC", "COMMENTS", "BLANK", "LINES"
+  end
   
-  srcFile = File.new(filename, 'r').each do |line|
-    stats['total'] += 1
-    
-    if isMultilineOpen
-      if line =~ patterns.multi_line_end
-        isMultilineOpen = false
+  def initialize(name)
+    @name = name
+    @code = 0
+    @comments = 0
+    @blank = 0
+    @lines = 0
+  end
+
+  # Iterates over all the lines in io (io might be a file or a string),
+  # analyzes them and appropriately increases the counter attributes.
+  def read(io)
+    in_multiline_comment = false
+    io.each do |line| 
+      @lines += 1
+
+      # Process the line to avoid matching comment characters within quoted
+      # strings or regular expressions.
+      line.gsub!(/\'.*?\'/, "X")  # Single quoted string
+      line.gsub!(/\".*?\"/, "X")  # Double quoted string
+      line.gsub!(/\/.*?\//, "X")  # Regular expression
+
+      case line
+      when MULTI_LINE_BEGIN_PATTERN
+        in_multiline_comment = true
+        @comments += 1
+      when MULTI_LINE_END_PATTERN
+        in_multiline_comment = false
+        @comments += 1
+      when BLANK_LINE_PATTERN
+        @blank += 1
+      when SINGLE_LINE_FULL_PATTERN
+        @comments += 1
+      when SINGLE_LINE_MIXED_PATTERN
+        @comments += 1
+        @code += 1
+      else
+        if in_multiline_comment
+          @comments += 1
+        else
+          @code += 1
+        end
       end
-      stats['comments'] += 1
-      next
     end
-    
-    if line =~ /^\s*$/  # Blank line
-      stats['blank'] += 1
-      next
-    end
-    
-    if line =~ patterns.multi_line_begin
-      isMultilineOpen = true
-      stats['comments'] += 1
-      next
-    end
-    
-    if line =~ patterns.single_line_full
-      stats['comments'] += 1
-      next
-    end
-
-    # Process the line to avoid matching comment characters within quoted
-    # strings or regular expressions.
-    line.gsub!(/\'.*?\'/, "X")  # Single quoted string
-    line.gsub!(/\".*?\"/, "X")  # Double quoted string
-    line.gsub!(/\/.*?\//, "X")  # Regular expression
-    
-    if line =~ patterns.single_line_mixed
-      stats['comments'] += 1
-      stats['code'] += 1
-    else
-      stats['code'] += 1
-    end   
   end
   
-  stats['code:comment'] = stats['code'].to_f / stats['comments']
+  # Get a formatted string containing all counter numbers and the name of
+  # this instance.
+  def to_s
+    sprintf LINE_FORMAT, @name, @code, @comments, @blank, @lines
+  end
   
-  return stats
 end
-  
+
+# Wrapper function to get metrics for a single file  
+def countloc(filename)
+  counter = LineCounter.new(filename)
+  File.open(filename) { |file| counter.read(file) }
+  return counter
+end
+
 # When run as a standalone script ...
 if $0 == __FILE__:
   usage = "Usage: #{$0} [-h --help] <file>"
@@ -97,6 +110,14 @@ if $0 == __FILE__:
     exit
   end
 
-  stats = countloc(ARGV[0])
-  stats.each { |k,v| puts "#{k} = #{v}" }
+#  stats = countloc(ARGV[0])
+#  stats.each { |k,v| puts "#{k} = #{v}" }
+
+  puts LineCounter.headline
+  
+  File.open(ARGV[0]) do |file|
+    counter = LineCounter.new(ARGV[0])
+    counter.read(file)
+    puts counter
+  end
 end
