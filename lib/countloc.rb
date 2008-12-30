@@ -30,7 +30,7 @@ class LineCounter
   MULTI_LINE_END_PATTERN = /=end(\s|$)/
   BLANK_LINE_PATTERN = /^\s*$/
 
-  LINE_FORMAT = '%-20s %8s %8s %8s %8s'
+  LINE_FORMAT = '%-40s %8s %8s %8s %8s'
 
   def self.headline
     sprintf LINE_FORMAT, "FILE", "LOC", "COMMENTS", "BLANK", "LINES"
@@ -81,6 +81,17 @@ class LineCounter
     end
   end
   
+  # Get a new LineCounter instance whose counters hold the sum of self
+  # and other.
+  def +(other)
+    sum = self.dup
+    sum.code += other.code
+    sum.comments += other.comments
+    sum.blank += other.blank
+    sum.lines += other.lines
+    return sum
+  end
+  
   # Get a formatted string containing all counter numbers and the name of
   # this instance.
   def to_s
@@ -105,19 +116,26 @@ if $0 == __FILE__:
     opts.banner = usage
   end.parse!
 
-  if ARGV.length != 1
+  if ARGV.length < 1
     puts usage
     exit
   end
 
-#  stats = countloc(ARGV[0])
-#  stats.each { |k,v| puts "#{k} = #{v}" }
-
+  # Sum will keep the running total
+  sum = LineCounter.new("TOTAL (#{ARGV.size} files)")
+  
   puts LineCounter.headline
   
-  File.open(ARGV[0]) do |file|
-    counter = LineCounter.new(ARGV[0])
-    counter.read(file)
-    puts counter
+  ARGV.each do |filename|
+    File.open(filename) do |file|
+      counter = LineCounter.new(filename)
+      counter.read(file)
+      sum += counter
+      puts counter
+    end
   end
+  
+  # Print the total stats
+  puts sum
+  
 end
