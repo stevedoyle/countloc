@@ -14,6 +14,10 @@ if "abcdefg".include? "#"
   puts "We should never get here!"
 end
 
+if "abcdefg" =~ '#'
+  puts "We should never get here!"
+end
+
 if "abcdefg" =~ /#/
   puts "We should never get here!"
 end

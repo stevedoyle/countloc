@@ -9,10 +9,10 @@ class RubyTest < Test::Unit::TestCase
   
   def test_ruby_single_line_comments
     stats = countloc('ruby_single_line_comments.rb')
-    assert_equal(14, stats['code'])
+    assert_equal(17, stats['code'])
     assert_equal(6, stats['comments'])
-    assert_equal(5, stats['blank'])
-    assert_equal(23, stats['total'])
+    assert_equal(6, stats['blank'])
+    assert_equal(27, stats['total'])
   end
 
   def test_ruby_multi_line_comments

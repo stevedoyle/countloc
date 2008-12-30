@@ -66,7 +66,8 @@ def countloc(filename)
 
     # Process the line to avoid matching comment characters within quoted
     # strings or regular expressions.
-    line.gsub!(/\".*?\"/, "X")  # Quoted string
+    line.gsub!(/\'.*?\'/, "X")  # Single quoted string
+    line.gsub!(/\".*?\"/, "X")  # Double quoted string
     line.gsub!(/\/.*?\//, "X")  # Regular expression
     
     if line =~ patterns.single_line_mixed
