@@ -12,9 +12,9 @@
 # * Multi-line comments - between "=begin" and "=end" tags.
 #
 # == Example
-# countloc.rb --help
-# countloc.rb some_file.rb
-# countloc.rb -r .
+# * countloc.rb --help
+# * countloc.rb some_file.rb
+# * countloc.rb -r .
 #
 
 require 'optparse'
@@ -22,8 +22,9 @@ require 'optparse'
 COUNTLOC_VERSION = '0.1.0'
 
 # Class that gathers the metrics. 
+# 
 # This class design & implementation is based heavily on Stefan Lang's 
-# ScriptLines class from the "Ruby Cookbook" - Section 19.5 "Gathering 
+# ScriptLines class from the "Ruby Cookbook" - Recipe 19.5 "Gathering 
 # Statistics About Your Code".
 class LineCounter
   attr_reader :name
@@ -37,6 +38,10 @@ class LineCounter
 
   LINE_FORMAT = '%8s %8s %8s %8s    %s'
 
+  #
+  # Generate a string that contains the column headers for the metrics
+  # printed with to_s
+  #
   def self.headline
     sprintf LINE_FORMAT, "LOC", "COMMENTS", "BLANK", "LINES", "FILE"
   end
@@ -49,8 +54,10 @@ class LineCounter
     @lines = 0
   end
 
+  # 
   # Iterates over all the lines in io (io might be a file or a string),
   # analyzes them and appropriately increases the counter attributes.
+  #
   def read(io)
     in_multiline_comment = false
     io.each do |line| 
@@ -86,8 +93,10 @@ class LineCounter
     end # read
   end # class LineCounter
   
+  #
   # Get a new LineCounter instance whose counters hold the sum of self
   # and other.
+  #
   def +(other)
     sum = self.dup
     sum.code += other.code
@@ -97,15 +106,19 @@ class LineCounter
     return sum
   end
   
+  #
   # Get a formatted string containing all counter numbers and the name of
   # this instance.
+  #
   def to_s
     sprintf LINE_FORMAT, @code, @comments, @blank, @lines, @name
   end
   
 end
 
-# Wrapper function to get metrics for a single file  
+#
+# Generates LOC metrics for the specified files and sends the results to the console.
+#
 def countloc(files, options = nil)
     
   # Sum will keep the running total
