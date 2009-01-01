@@ -11,11 +11,16 @@
 # * Single line comments - starting from a # until the end of the line.
 # * Multi-line comments - between "=begin" and "=end" tags.
 #
+# == Download
+# The latest countloc release can be downloaded from RubyForge: 
+# http://rubyforge.org/frs/?group_id=7555&release_id=29931
+#
 # == Example
 # * countloc.rb --help
 # * countloc.rb some_file.rb
 # * countloc.rb -r .
 #
+
 
 require 'optparse'
 
@@ -130,13 +135,12 @@ def countloc(files, options = nil)
   # Expand directories into the appropriate file lists
   dirs = files.select { |filename| File.directory?(filename) }
   if dirs.size > 0
-    recursePattern = ""
-    recursePattern = "**" if options.recurse
-
+    recursePattern = ("**" if options.recurse) || ""
     files -= dirs
     files += dirs.collect { |dirname| Dir.glob(File.join(dirname, recursePattern, "*.rb"))}.flatten
   end
-  
+
+  # Generate metrics for each file
   files.each do |filename|
     File.open(filename) do |file|
       counter = LineCounter.new(filename)
@@ -151,7 +155,9 @@ def countloc(files, options = nil)
   return sum
 end
 
+#
 # When run as a standalone script ...
+#
 if $0 == __FILE__:
   
   require 'ostruct'

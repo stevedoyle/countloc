@@ -18,11 +18,12 @@ Initial releases will support counting lines of code in Ruby source code.
 Subsequent releases will add support for other programming languages such as
 Python, C, C++, C#, Java, Perl, etc. ...
 
-
 2. Installation
 ---------------
 CountLOC is packaged as a Ruby gem and as a .zip file. Within each archive, the 
 countloc.rb script is located in the lib directory.
+
+The latest release can be downloaded from: http://rubyforge.org/frs/?group_id=7555&release_id=29931
 
 Gem:
 	gem install countloc.gem

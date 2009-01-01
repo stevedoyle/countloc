@@ -11,22 +11,6 @@ class RubyTest < Test::Unit::TestCase
     @counter = LineCounter.new('Test')
   end
   
-  def test_ruby_single_line_comments
-    @counter.read(File.open('ruby_single_line_comments.rb', 'r'))
-    assert_equal(17, @counter.code)
-    assert_equal(6,  @counter.comments)
-    assert_equal(6,  @counter.blank)
-    assert_equal(27, @counter.lines)
-  end
-
-  def test_ruby_multi_line_comments
-    @counter.read(File.open('ruby_multiline_comments.rb', 'r'))
-    assert_equal(2, @counter.code)
-    assert_equal(4, @counter.comments)
-    assert_equal(1, @counter.blank)
-    assert_equal(7, @counter.lines)
-  end
-
   def test_ruby_single_line_comment
     @counter.read("# This is a comment")
     assert_equal(0, @counter.code)
@@ -105,6 +89,18 @@ class RubyTest < Test::Unit::TestCase
     assert_equal(0, @counter.comments)
     assert_equal(1, @counter.blank)
     assert_equal(1, @counter.lines)
+  end
+
+  def test_ruby_mixed_code_and_comments
+    @counter.read("# This is a comment\n" +
+      "1.upto(5).each {|x| puts x}\n" +
+      "=begin\n" +
+      " multiline comment\n" +
+      "=end")
+    assert_equal(1, @counter.code)
+    assert_equal(4, @counter.comments)
+    assert_equal(0, @counter.blank)
+    assert_equal(5, @counter.lines)
   end
 
 end
