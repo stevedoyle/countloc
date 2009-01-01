@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+#
 # = countloc.rb - Ruby line counter.
 #
 # Copyright (C) 2008  Stephen Doyle
@@ -12,9 +14,12 @@
 # == Example
 # countloc.rb --help
 # countloc.rb some_file.rb
+# countloc.rb -r .
 #
 
 require 'optparse'
+
+COUNTLOC_VERSION = '0.1.0'
 
 # Class that gathers the metrics. 
 # This class design & implementation is based heavily on Stefan Lang's 
@@ -30,10 +35,10 @@ class LineCounter
   MULTI_LINE_END_PATTERN = /=end(\s|$)/
   BLANK_LINE_PATTERN = /^\s*$/
 
-  LINE_FORMAT = '%-40s %8s %8s %8s %8s'
+  LINE_FORMAT = '%8s %8s %8s %8s    %s'
 
   def self.headline
-    sprintf LINE_FORMAT, "FILE", "LOC", "COMMENTS", "BLANK", "LINES"
+    sprintf LINE_FORMAT, "LOC", "COMMENTS", "BLANK", "LINES", "FILE"
   end
   
   def initialize(name)
@@ -76,10 +81,10 @@ class LineCounter
           @comments += 1
         else
           @code += 1
-        end
-      end
-    end
-  end
+        end # if
+      end # case
+    end # read
+  end # class LineCounter
   
   # Get a new LineCounter instance whose counters hold the sum of self
   # and other.
@@ -95,44 +100,31 @@ class LineCounter
   # Get a formatted string containing all counter numbers and the name of
   # this instance.
   def to_s
-    sprintf LINE_FORMAT, @name, @code, @comments, @blank, @lines
+    sprintf LINE_FORMAT, @code, @comments, @blank, @lines, @name
   end
   
 end
 
 # Wrapper function to get metrics for a single file  
-def countloc(filename)
-  counter = LineCounter.new(filename)
-  File.open(filename) { |file| counter.read(file) }
-  return counter
-end
-
-# When run as a standalone script ...
-if $0 == __FILE__:
-  usage = "Usage: #{File.basename($0)} [-h --help] <file>"
-
-  options = {}  
-  OptionParser.new do |opts|
-    opts.banner = usage
+def countloc(files, options = nil)
     
-    opts.on_tail('-h', '--help', 'display this help and exit') do
-      puts opts
-      exit
-    end
-    
-  end.parse!
-
-  if ARGV.length < 1
-    puts usage
-    exit
-  end
-
   # Sum will keep the running total
-  sum = LineCounter.new("TOTAL (#{ARGV.size} files)")
-  
+  sum = LineCounter.new("TOTAL")
+
+  # Print a banner showing the column headers
   puts LineCounter.headline
+
+  # Expand directories into the appropriate file lists
+  dirs = files.select { |filename| File.directory?(filename) }
+  if dirs.size > 0
+    recursePattern = ""
+    recursePattern = "**" if options.recurse
+
+    files -= dirs
+    files += dirs.collect { |dirname| Dir.glob(File.join(dirname, recursePattern, "*.rb"))}.flatten
+  end
   
-  ARGV.each do |filename|
+  files.each do |filename|
     File.open(filename) do |file|
       counter = LineCounter.new(filename)
       counter.read(file)
@@ -143,5 +135,59 @@ if $0 == __FILE__:
   
   # Print the total stats
   puts sum
+  return sum
+end
+
+# When run as a standalone script ...
+if $0 == __FILE__:
   
+  require 'ostruct'
+  
+  class CmdLineOptParser
+    
+    def self.usage 
+      "Usage: #{File.basename($0)} [options] <file>"
+    end
+
+    #
+    # Return a structure describing the options
+    #
+    def self.parse(args)
+      # The options set on the command line will be collected in "options"
+      # Setup the defaults here
+      options = OpenStruct.new
+      options.recurse = false
+
+      OptionParser.new do |opts|
+        opts.banner = usage
+
+        opts.on('-r', '--recurse', 'Recurse into subdirectories') do |r|
+          options.recurse = true
+        end
+
+        opts.on('-v', '--version', 'Display version number') do 
+          puts "#{File.basename($0)}, version: #{COUNTLOC_VERSION}"
+          exit
+        end
+
+        opts.on_tail('-h', '--help', 'display this help and exit') do
+          puts opts
+          exit
+        end
+      
+      end.parse!(args)
+      
+      options
+    end # parse()
+  end # class CmdLineOptParser
+  
+  options = CmdLineOptParser.parse(ARGV)
+  
+  if ARGV.length < 1
+    puts CmdLineOptParser.usage
+    exit
+  end
+
+  countloc(ARGV, options)
+
 end

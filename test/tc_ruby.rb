@@ -12,19 +12,19 @@ class RubyTest < Test::Unit::TestCase
   end
   
   def test_ruby_single_line_comments
-    counter = countloc('ruby_single_line_comments.rb')
-    assert_equal(17, counter.code)
-    assert_equal(6,  counter.comments)
-    assert_equal(6,  counter.blank)
-    assert_equal(27, counter.lines)
+    @counter.read(File.open('ruby_single_line_comments.rb', 'r'))
+    assert_equal(17, @counter.code)
+    assert_equal(6,  @counter.comments)
+    assert_equal(6,  @counter.blank)
+    assert_equal(27, @counter.lines)
   end
 
   def test_ruby_multi_line_comments
-    counter = countloc('ruby_multiline_comments.rb')
-    assert_equal(2, counter.code)
-    assert_equal(4, counter.comments)
-    assert_equal(1, counter.blank)
-    assert_equal(7, counter.lines)
+    @counter.read(File.open('ruby_multiline_comments.rb', 'r'))
+    assert_equal(2, @counter.code)
+    assert_equal(4, @counter.comments)
+    assert_equal(1, @counter.blank)
+    assert_equal(7, @counter.lines)
   end
 
   def test_ruby_single_line_comment

@@ -1,4 +1,4 @@
-Introduction
+= Introduction
 ------------
 
 Contents:
@@ -6,6 +6,7 @@ Contents:
 1. Overview
 2. Installation
 3. Usage
+4. Release Notes
 
 
 1. Overview
@@ -20,10 +21,11 @@ Python, C, C++, C#, Java, Perl, etc. ...
 
 2. Installation
 ---------------
-CountLOC is packaged as a Ruby gem and as a .zip file. 
+CountLOC is packaged as a Ruby gem and as a .zip file. Within each archive, the 
+countloc.rb script is located in the lib directory.
 
 Gem:
-	ruby gem install countloc.gem
+	gem install countloc.gem
 	
 zip:
 	unzip countloc.zip
@@ -32,8 +34,40 @@ zip:
 3. Usage
 --------
 For full listing of options and usage:
-	countloc --help
+	countloc.rb --help
 	
 To get the LOC metrics for a single Ruby file:
-	countloc some_file.rb
-	
+	countloc.rb some_file.rb
+
+To get the LOC metrics for multiple Ruby files:
+	countloc.rb some_file.rb some_other_file.rb
+
+To get the LOC metrics for all Ruby files in the current directory:
+	countloc.rb *.rb
+or	countloc.rb .
+
+To get the LOC metrics for all Ruby files in a directory tree with recursion
+into subdirectories:
+	countloc.rb -r .
+
+
+4. Release Notes
+----------------
+Release 0.1.0:
+* Features
+** Added support for processing multiple files at once.
+** Added support for processing all .rb files in a directory.
+** Added support for recursing into directory trees.
+** Improved formatting of output.
+
+* Bugfixes: 
+** #23380 - Not suppressing path information in the program name in the usage string.
+** #23379 - Incorrectly counting a # inside a single quoted string as a comment.
+
+Release 0.0.1:
+* Features
+** Initial release.
+** Supports generating LOC metrics for Ruby source code for a single 
+   file at a time.
+** Handles multi-line and single line comments.
+** Handles mixed lines of both code and comments.
