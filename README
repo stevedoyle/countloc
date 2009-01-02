@@ -18,15 +18,20 @@ Python, C, C++, C#, Java, Perl, etc. ...
 The latest release can be downloaded from: http://rubyforge.org/frs/?group_id=7555&release_id=29931
 
 == Installation
-CountLOC is packaged as a Ruby gem and as a .zip file. Within each archive, the 
-countloc.rb script is located in the lib directory.
+CountLOC is packaged as a Ruby gem and as a .zip file. 
 
-Gem:
-	% gem install countloc.gem	
+.gem:
+	% gem install countloc-x.y.z.gem	
 
-zip:
-	% unzip countloc.zip
+.zip:
+	% unzip countloc-x.y.z.zip
+	% cd countloc-x.y.z
+	% ruby setup.rb install 
  
+.tgz:
+	% tar zxf countloc-x.y.z.tgz
+	% cd countloc-x.y.z
+	% ruby setup.rb install 
 
 == Usage
 For full listing of options and usage:
