@@ -52,7 +52,7 @@ gem_spec = Gem::Specification.new do |s|
   s.summary = %q{Ruby line counter - countLOC}
   s.homepage = %q{http://countloc.rubyforge.org/}
   s.description = %q{LOC metrics generation script implementation in Ruby.}
-  s.files = [ "README", "LICENSE"] + Dir['lib/**/*.rb'] + 
+  s.files = [ "README", "LICENSE", "setup.rb"] + Dir['lib/**/*.rb'] + 
     Dir['test/**/*.rb'] + Dir['examples/**/*.rb']
   s.rdoc_options << '--title' << 'CountLOC Documentation'
   s.require_paths << 'lib'
