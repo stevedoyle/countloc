@@ -24,8 +24,9 @@ end
 # Generate documentation
 #
 Rake::RDocTask.new('rdoc') do |t|
-  t.rdoc_files.include('lib/**/*.rb')
+  t.rdoc_files.include(['README', 'lib/**/*.rb'])
   t.title = "#{PROJECT} API documentation"
+  t.main = 'README'
   t.rdoc_dir = html_dir
 end
 
@@ -51,7 +52,7 @@ gem_spec = Gem::Specification.new do |s|
   s.summary = %q{Ruby line counter - countLOC}
   s.homepage = %q{http://countloc.rubyforge.org/}
   s.description = %q{LOC metrics generation script implementation in Ruby.}
-  s.files = [ "README.txt", "LICENSE.txt"] + Dir['lib/**/*.rb'] + 
+  s.files = [ "README", "LICENSE"] + Dir['lib/**/*.rb'] + 
     Dir['test/**/*.rb'] + Dir['examples/**/*.rb']
   s.rdoc_options << '--title' << 'CountLOC Documentation'
   s.require_paths << 'lib'
