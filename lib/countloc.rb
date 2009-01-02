@@ -41,14 +41,14 @@ class LineCounter
   MULTI_LINE_END_PATTERN = /=end(\s|$)/
   BLANK_LINE_PATTERN = /^\s*$/
 
-  LINE_FORMAT = '%8s %8s %8s %8s    %s'
+  LINE_FORMAT = '%8s %8s %8s %8s %12s    %s'
 
   #
   # Generate a string that contains the column headers for the metrics
   # printed with to_s
   #
   def self.headline
-    sprintf LINE_FORMAT, "LOC", "COMMENTS", "BLANK", "LINES", "FILE"
+    sprintf LINE_FORMAT, "LOC", "COMMENTS", "BLANK", "LINES", "CODE:COMMENT", "FILE"
   end
   
   def initialize(name)
@@ -116,7 +116,8 @@ class LineCounter
   # this instance.
   #
   def to_s
-    sprintf LINE_FORMAT, @code, @comments, @blank, @lines, @name
+    codeCommentRatio = (sprintf "%0.2f", @code.to_f/@comments if @comments > 0) || '--'
+    sprintf LINE_FORMAT, @code, @comments, @blank, @lines, codeCommentRatio, @name
   end
   
 end
