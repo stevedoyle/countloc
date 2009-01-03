@@ -51,6 +51,13 @@ class LineCounter
     sprintf LINE_FORMAT, "LOC", "COMMENTS", "BLANK", "LINES", "CODE:COMMENT", "FILE"
   end
   
+  #
+  # Return an array containing the column names for the counters collected.
+  #
+  def self.columnNames
+    self.headline.split(' ', 6)
+  end
+
   def initialize(name)
     @name = name
     @code = 0
@@ -119,6 +126,54 @@ class LineCounter
     codeCommentRatio = (sprintf "%0.2f", @code.to_f/@comments if @comments > 0) || '--'
     sprintf LINE_FORMAT, @code, @comments, @blank, @lines, codeCommentRatio, @name
   end
+
+  #
+  # Get a formatted string containing all counter numbers and the name of
+  # this instance.
+  #
+  def to_a
+    self.to_s.split(' ', 6)
+  end
+  
+end
+
+#
+# Class to generate a CSV file
+#
+class CSVWriter
+  
+  def initialize(filename)
+    @filename = filename
+  end
+  
+  def write(metrics)
+    File.open(@filename, "wb") do |file|
+      metrics.each { |metric| file.puts metric.to_a.join(',') }
+    end
+  end
+  
+end
+
+#
+# Class to generate a HTML file
+#
+class HTMLWriter
+  
+  def initialize(filename)
+    @filename = filename
+  end
+  
+  def write(metrics)
+    File.open(@filename, "w") do |file|
+      file.puts %{<table border="1" cellspacing="0" cellpadding="2">}
+      metrics.each do |metric| 
+        file.puts %{<tr>}
+        metric.to_a.each { |cell| file.puts %{<td>#{cell}</td>} } 
+        file.puts %{</tr>}
+      end
+      file.puts %{</table>}
+    end
+  end
   
 end
 
@@ -126,13 +181,10 @@ end
 # Generates LOC metrics for the specified files and sends the results to the console.
 #
 def countloc(files, options = nil)
+  fileWriters = []
+  fileWriters << CSVWriter.new(options.csvFilename) if options.csv
+  fileWriters << HTMLWriter.new(options.htmlFilename) if options.html
     
-  # Sum will keep the running total
-  sum = LineCounter.new("TOTAL")
-
-  # Print a banner showing the column headers
-  puts LineCounter.headline
-
   # Expand directories into the appropriate file lists
   dirs = files.select { |filename| File.directory?(filename) }
   if dirs.size > 0
@@ -140,6 +192,15 @@ def countloc(files, options = nil)
     files -= dirs
     files += dirs.collect { |dirname| Dir.glob(File.join(dirname, recursePattern, "*.rb"))}.flatten
   end
+  
+  # Sum will keep the running total
+  sum = LineCounter.new("TOTAL")
+
+  # Metrics will collect the counters for each file.
+  metrics = [LineCounter.columnNames]
+
+  # Print a banner showing the column headers
+  puts LineCounter.headline
 
   # Generate metrics for each file
   files.each do |filename|
@@ -147,12 +208,17 @@ def countloc(files, options = nil)
       counter = LineCounter.new(filename)
       counter.read(file)
       sum += counter
+      metrics << counter
       puts counter
     end
   end
   
-  # Print the total stats
-  puts sum
+  # Add the totals to the metrics array
+  metrics << sum
+
+  # Write the metrics to the required files in the appropriate formats
+  fileWriters.each { |writer| writer.write(metrics) }
+  
   return sum
 end
 
@@ -177,11 +243,15 @@ if $0 == __FILE__:
       # Setup the defaults here
       options = OpenStruct.new
       options.recurse = false
+      options.csv = false
+      options.csvFilename = ""
+      options.html = false
+      options.htmlFilename = ""
 
       OptionParser.new do |opts|
         opts.banner = usage
 
-        opts.on('-r', '--recurse', 'Recurse into subdirectories') do |r|
+        opts.on('-r', '--recurse', 'Recurse into subdirectories') do
           options.recurse = true
         end
 
@@ -190,7 +260,17 @@ if $0 == __FILE__:
           exit
         end
 
-        opts.on_tail('-h', '--help', 'display this help and exit') do
+        opts.on('--csv csvFilename', 'Generate csv file') do |csvFilename|
+          options.csvFilename = csvFilename
+          options.csv = true
+        end
+
+        opts.on('--html htmlFilename', 'Generate html file') do |htmlFilename|
+          options.htmlFilename = htmlFilename
+          options.html = true
+        end
+
+        opts.on_tail('-h', '--help', 'Display this help and exit') do
           puts opts
           exit
         end
