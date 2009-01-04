@@ -2,10 +2,12 @@ require "rake/testtask"
 require "rake/clean"
 require "rake/rdoctask"
 require "rake/gempackagetask"
+require "date"
+require "lib/countloc"
 
 html_dir = 'doc/html'
 PROJECT = 'countloc'
-PROJECT_VERSION = '0.1.0'
+PROJECT_VERSION = CountLOC::VERSION
 
 rubyforge_user = 'stephendoyle75'
 rubyforge_project = PROJECT
@@ -45,7 +47,7 @@ end
 gem_spec = Gem::Specification.new do |s|
   s.name = PROJECT
   s.version = PROJECT_VERSION
-  s.date = %q{2009-01-01}
+  s.date = %q{Date.today}
   s.authors = ["Stephen Doyle"]
   s.email = %q{support@stephendoyle.net}
   s.has_rdoc = true

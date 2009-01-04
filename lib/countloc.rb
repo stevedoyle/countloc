@@ -31,7 +31,7 @@ require 'time'
 #
 module CountLOC
 
-  VERSION = '0.1.1'
+  VERSION = '0.2.0'
 
   # Class that gathers the metrics. 
   # 
@@ -253,7 +253,7 @@ module CountLOC
     if dirs.size > 0
       recursePattern = ("**" if options.recurse) || ""
       files -= dirs
-      files += dirs.collect { |dirname| Dir.glob(File.join(dirname, recursePattern, "*.rb"))}.flatten
+      files += dirs.collect { |dirname| Dir.glob(File.join(dirname, recursePattern, "*.rb"))}.flatten      
     end
 
     # Sum will keep the running total
