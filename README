@@ -51,9 +51,25 @@ or
 To get the LOC metrics for all Ruby files in a directory tree with recursion
 into subdirectories:
 	% countloc.rb -r .
+	
+To export the results to a html file:
+	% countloc.rb -r --html countloc.html .
+
+To export the results to a csv file:
+	% countloc.rb -r --csv countloc.csv .
 
 
 == Release Notes
+=== Release 0.2.0:
+Features
+* Added support for exporting results in csv and html format.
+* Improved error handling - e.g. incorrect/missing command line options, file errors, etc.
+* Added setup.rb for ease of installation from the .zip/.tgz release formats.
+* Added CountLOC module to encapsulate methods and classes.
+ 
+Bugfixes: 
+* None
+
 === Release 0.1.0:
 Features
 * Added support for processing multiple files at once.

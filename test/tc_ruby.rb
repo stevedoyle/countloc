@@ -7,6 +7,8 @@ require 'countloc'
 
 class RubyTest < Test::Unit::TestCase
 
+  include CountLOC
+
   def setup
     @counter = LineCounter.new('Test')
   end
