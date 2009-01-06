@@ -60,6 +60,13 @@ To export the results to a csv file:
 
 
 == Release Notes
+=== Release 0.2.1:
+Features
+* None
+
+Bugfixes: 
+* #23479 - Column headers not displayed on console view of results
+
 === Release 0.2.0:
 Features
 * Added support for exporting results in csv and html format.

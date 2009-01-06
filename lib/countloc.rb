@@ -31,7 +31,7 @@ require 'time'
 #
 module CountLOC
 
-  VERSION = '0.2.0'
+  VERSION = '0.2.1'
 
   # Class that gathers the metrics. 
   # 
@@ -192,7 +192,7 @@ module CountLOC
   class ConsoleWriter
     # Write the data to the console
     def write(data)
-      puts data
+      puts data.to_s
     end  
   end
 
