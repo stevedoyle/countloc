@@ -15,7 +15,7 @@ Subsequent releases will add support for other programming languages such as
 Python, C, C++, C#, Java, Perl, etc. ...
 
 == Download
-The latest release can be downloaded from: http://rubyforge.org/frs/?group_id=7555&release_id=29931
+The latest release can be downloaded from: http://rubyforge.org/projects/countloc/
 
 == Installation
 CountLOC is packaged as a Ruby gem and as a .zip file. 
