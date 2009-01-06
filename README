@@ -15,7 +15,7 @@ Subsequent releases will add support for other programming languages such as
 Python, C, C++, C#, Java, Perl, etc. ...
 
 == Download
-The latest release can be downloaded from: http://rubyforge.org/frs/?group_id=7555&release_id=29931
+The latest release can be downloaded from: http://rubyforge.org/projects/countloc/
 
 == Installation
 CountLOC is packaged as a Ruby gem and as a .zip file. 
@@ -60,6 +60,13 @@ To export the results to a csv file:
 
 
 == Release Notes
+=== Release 0.2.1:
+Features
+* None
+
+Bugfixes: 
+* #23479 - Column headers not displayed on console view of results
+
 === Release 0.2.0:
 Features
 * Added support for exporting results in csv and html format.
