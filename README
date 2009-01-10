@@ -60,6 +60,15 @@ To export the results to a csv file:
 
 
 == Release Notes
+=== Release 0.3.0:
+Features
+* Added support for generating LOC metrics for languages other than Ruby.
+  Supported languages: Ruby, Python, C, C++, C#, Java and any language that
+  shares the same commenting style as either of these languages.
+
+Bugfixes:
+* Added documentation on supported options for CountLOC.countloc()
+
 === Release 0.2.1:
 Features
 * None
