@@ -58,6 +58,12 @@ To export the results to a html file:
 To export the results to a csv file:
 	% countloc.rb -r --csv countloc.csv .
 
+To get LOC metrics for a C file:
+	% countloc.rb hello.c
+	
+To get LOC metrics for all C files in a directory tree:
+	% countloc.rb -r --file-types "*.c *.h"
+	
 
 == Release Notes
 === Release 0.3.0:
