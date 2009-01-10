@@ -31,7 +31,7 @@ require 'time'
 #
 module CountLOC
 
-  VERSION = '0.2.1'
+  VERSION = '0.3.0'
 
   # Class that gathers the metrics. 
   # 
@@ -42,11 +42,33 @@ module CountLOC
     attr_reader :name
     attr_accessor :code, :comments, :blank, :lines
 
-    SINGLE_LINE_FULL_PATTERN = /^\s*#/
-    SINGLE_LINE_MIXED_PATTERN = /#/
-    MULTI_LINE_BEGIN_PATTERN = /=begin(\s|$)/
-    MULTI_LINE_END_PATTERN = /=end(\s|$)/
-    BLANK_LINE_PATTERN = /^\s*$/
+    COMMENT_PATTERNS = {
+      :ruby => {
+        :single_line_full => /^\s*#/,
+        :single_line_mixed => /#/,
+        :multiline_begin => /=begin(\s|$)/,
+        :multiline_end => /=end(\s|$)/,
+        :blank_line => /^\s*$/
+      },
+      
+      :python => {
+        :single_line_full => /^\s*#/,
+        :single_line_mixed => /#/,
+        :multiline_begin => /^\s*"""/,
+        :multiline_end => /"""/,
+        :blank_line => /^\s*$/
+      },
+
+      :cplusplus => {
+        :single_line_full => /^\s*\/\//,
+        :single_line_mixed => /\/\//,
+        :multiline_begin => /\/\*/,
+        :multiline_end => /\*\/\s*$/,
+        :multiline_begin_mixed => /^[^\s]+.*\/\*/,
+        :multiline_end_mixed => /\*\/\s*[^\s]+$/,
+        :blank_line => /^\s*$/
+      }
+    }
 
     LINE_FORMAT = '%8s %8s %8s %8s %12s    %s'
 
@@ -64,7 +86,24 @@ module CountLOC
     def self.columnNames
       self.headline.split(' ', 6)
     end
-
+    
+    #
+    # Retrieve the commenting style that should be used for the given 
+    # file type.
+    #
+    def self.commentStyle(ext)
+      { ".rb"   => :ruby,
+        ".py"   => :python,
+        ".c"    => :cplusplus,
+        ".cpp"  => :cplusplus,
+        ".cc"   => :cplusplus,
+        ".cs"   => :cplusplus,
+        ".h"    => :cplusplus,
+        ".hpp"  => :cplusplus,
+        ".java" => :cplusplus
+      }[ext]
+    end
+    
     def initialize(name)
       @name = name
       @code = 0
@@ -77,7 +116,7 @@ module CountLOC
     # Iterates over all the lines in io (io might be a file or a string),
     # analyzes them and appropriately increases the counter attributes.
     #
-    def read(io)
+    def read(io, style)
       in_multiline_comment = false
       io.each do |line| 
         @lines += 1
@@ -85,23 +124,53 @@ module CountLOC
         # Process the line to avoid matching comment characters within quoted
         # strings or regular expressions.
         line.gsub!(/\'.*?\'/, "X")  # Single quoted string
-        line.gsub!(/\".*?\"/, "X")  # Double quoted string
-        line.gsub!(/\/.*?\//, "X")  # Regular expression
+        line.gsub!(/[^\"]\"[^\"]+\"/, "X")  # Double quoted string
+        if style == :ruby:
+          line.gsub!(/\/.*?\//, "X")  # Regular expression
+        end
 
+        patterns = COMMENT_PATTERNS[style]
+        
+        # In the event where the multiline_end pattern is the same as the 
+        # multiline_begin pattern, it is necessary to check for the ending
+        # pattern first - otherwise we will never detect the ending pattern.
+        if in_multiline_comment
+          if patterns.include?(:multiline_end_mixed) and 
+            line =~ patterns[:multiline_end_mixed]
+            @comments += 1
+            @code += 1
+            in_multiline_comment = false
+            next
+          elsif line =~ patterns[:multiline_end]
+            @comments += 1
+            in_multiline_comment = false
+            next
+          end
+        end
+        
         case line
-        when MULTI_LINE_BEGIN_PATTERN
-          in_multiline_comment = true
+        when patterns[:multiline_begin]
+          in_multiline_comment = true 
+          if patterns.include?(:multiline_begin_mixed) and 
+            line =~ patterns[:multiline_begin_mixed]
+            @code += 1
+          end
+          
+          if line.sub(patterns[:multiline_begin], "X") =~ patterns[:multiline_end]
+            in_multiline_comment = false
+          end
           @comments += 1
-        when MULTI_LINE_END_PATTERN
-          in_multiline_comment = false
-          @comments += 1
-        when BLANK_LINE_PATTERN
+          
+        when patterns[:blank_line]
           @blank += 1
-        when SINGLE_LINE_FULL_PATTERN
+        
+        when patterns[:single_line_full]
           @comments += 1
-        when SINGLE_LINE_MIXED_PATTERN
+        
+        when patterns[:single_line_mixed]
           @comments += 1
           @code += 1
+        
         else
           if in_multiline_comment
             @comments += 1
@@ -240,20 +309,36 @@ module CountLOC
 
   #
   # Generates LOC metrics for the specified files and sends the results to the console.
-  #
-  def countloc(files, options = nil)
+  # Supported options:
+  # * :recurse - recurse into sub-directories. Default = false.
+  # * :csv - write the results to a csv file. Default = false.
+  # * :csvFilename - name of csv file to generate. Used with :csv option. Default = countloc.csv
+  # * :html - write the results to a html file. Default = false.
+  # * :htmlFilename - name of html file to generate. Used with :html option. Default = countloc.html  
+  # * :quiet - do not output results to stdout
+  # * :fileTypes - Types of file to include in the LOC analysis. Used for filtering files
+  #   in recursive analysis and to specify languages other than Ruby. Default = *.rb
+  def countloc(files, options = {})
+
+    # Setup defaults for filenames
+    options[:fileTypes] = ["*.rb"] if not options.include?(:fileTypes)
+    options[:csvFilename] = "countloc.csv" if not options.include?(:csvFilename)
+    options[:htmlFilename] = "countloc.html" if not options.include?(:htmlFilename)
 
     # Setup the output writers based on the options
-    writers = [ConsoleWriter.new]
-    writers << CsvFileWriter.new(options.csvFilename) if options.csv
-    writers << HtmlFileWriter.new(options.htmlFilename) if options.html
+    writers = []
+    writers << ConsoleWriter.new if not options[:quiet]
+    writers << CsvFileWriter.new(options[:csvFilename]) if options[:csv]
+    writers << HtmlFileWriter.new(options[:htmlFilename]) if options[:html]
 
     # Expand directories into the appropriate file lists
     dirs = files.select { |filename| File.directory?(filename) }
     if dirs.size > 0
-      recursePattern = ("**" if options.recurse) || ""
+      recursePattern = ("**" if options[:recurse]) || ""
       files -= dirs
-      files += dirs.collect { |dirname| Dir.glob(File.join(dirname, recursePattern, "*.rb"))}.flatten      
+      options[:fileTypes].each do |fileType|
+        files += dirs.collect { |dirname| Dir.glob(File.join(dirname, recursePattern, fileType))}.flatten      
+      end
     end
 
     # Sum will keep the running total
@@ -267,7 +352,7 @@ module CountLOC
       begin
         File.open(filename) do |file|
           counter = LineCounter.new(filename)
-          counter.read(file)
+          counter.read(file, LineCounter.commentStyle(File.extname(filename)))
           sum += counter
           results << counter
         end
@@ -294,8 +379,6 @@ end # module
 #
 if $0 == __FILE__:
 
-  require 'ostruct'
-
   class CmdLineOptParser
 
     def self.usage 
@@ -308,19 +391,14 @@ if $0 == __FILE__:
     def self.parse(args)
       # The options set on the command line will be collected in "options"
       # Setup the defaults here
-      options = OpenStruct.new
-      options.recurse = false
-      options.csv = false
-      options.csvFilename = ""
-      options.html = false
-      options.htmlFilename = ""
-
+      options = {}
+      
       begin
         OptionParser.new do |opts|
           opts.banner = usage
 
           opts.on('-r', '--recurse', 'Recurse into subdirectories') do
-            options.recurse = true
+            options[:recurse] = true
           end
 
           opts.on('-v', '--version', 'Display version number') do 
@@ -328,14 +406,24 @@ if $0 == __FILE__:
             exit
           end
 
+          opts.on('-q', '--quiet', "Don't write results to stdout") do 
+            options[:quiet] = true
+          end
+
           opts.on('--csv csvFilename', 'Generate csv file') do |csvFilename|
-            options.csvFilename = csvFilename
-            options.csv = true
+            options[:csvFilename] = csvFilename
+            options[:csv] = true
           end
 
           opts.on('--html htmlFilename', 'Generate html file') do |htmlFilename|
-            options.htmlFilename = htmlFilename
-            options.html = true
+            options[:htmlFilename] = htmlFilename
+            options[:html] = true
+          end
+
+          opts.on('--file-types fileTypes', 
+            "File types to be included.",
+            "Default = *.rb") do |fileTypes|
+            options[:fileTypes] = fileTypes.split()
           end
 
           opts.on_tail('-h', '--help', 'Display this help and exit') do
