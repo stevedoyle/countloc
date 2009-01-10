@@ -4,3 +4,5 @@ $:.unshift File.join(File.dirname(__FILE__), "..", "lib")
 
 require 'test/unit'
 require 'tc_ruby'
+require 'tc_python'
+require 'tc_cpp'
