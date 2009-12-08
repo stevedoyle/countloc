@@ -51,6 +51,14 @@ module CountLOC
         :blank_line => /^\s*$/
       },
       
+      :vb => {
+        :single_line_full => /^\s*\'/,
+        :single_line_mixed => /\'/,
+        :multiline_begin => /=begin(\s|$)/, # No VB multi-line comment
+        :multiline_end => /=end(\s|$)/,     # No VB multi-line comment
+        :blank_line => /^\s*$/
+      },
+
       :python => {
         :single_line_full => /^\s*#/,
         :single_line_mixed => /#/,
@@ -100,7 +108,8 @@ module CountLOC
         ".cs"   => :cplusplus,
         ".h"    => :cplusplus,
         ".hpp"  => :cplusplus,
-        ".java" => :cplusplus
+        ".java" => :cplusplus,
+        ".vb"   => :vb
       }[ext]
     end
     
