@@ -31,7 +31,7 @@ require 'time'
 #
 module CountLOC
 
-  VERSION = '0.3.0'
+  VERSION = '0.3.1'
 
   # Class that gathers the metrics. 
   # 
@@ -125,7 +125,7 @@ module CountLOC
         # strings or regular expressions.
         line.gsub!(/\'.*?\'/, "X")  # Single quoted string
         line.gsub!(/[^\"]\"[^\"]+\"/, "X")  # Double quoted string
-        if style == :ruby:
+        if style == :ruby
           line.gsub!(/\/.*?\//, "X")  # Regular expression
         end
 
@@ -377,7 +377,7 @@ end # module
 #
 # When run as a standalone script ...
 #
-if $0 == __FILE__:
+if $0 == __FILE__
 
   class CmdLineOptParser
 
