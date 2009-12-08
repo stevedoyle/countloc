@@ -66,6 +66,13 @@ To get LOC metrics for all C files in a directory tree:
 	
 
 == Release Notes
+=== Release <INSERT RELEASE NUMBER>:
+Features
+* Added VB support via patch posted on Rubyforge
+
+Bugfixes:
+* None
+
 === Release 0.3.1:
 Features
 * No new features - bugfix release only.
