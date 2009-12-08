@@ -66,6 +66,13 @@ To get LOC metrics for all C files in a directory tree:
 	
 
 == Release Notes
+=== Release 0.3.1:
+Features
+* No new features - bugfix release only.
+
+Bugfixes:
+* [27525] Fixed compilation errors when using ruby 1.9 
+
 === Release 0.3.0:
 Features
 * Added support for generating LOC metrics for languages other than Ruby.

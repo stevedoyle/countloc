@@ -131,7 +131,7 @@ task "publish" => ["prepare-release"] do
     Rake::Task["publish-packages"].invoke
     puts "Release done!"
   else
-    puts "Can't invoke rubyforg command."
+    puts "Can't invoke rubyforge command."
     puts "Either install rubyforge with 'gem install rubyforge'"
     puts "and retry or upload the package files manually!"
   end
