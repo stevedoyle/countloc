@@ -71,7 +71,7 @@ Features
 * Added VB support via patch posted on Rubyforge
 
 Bugfixes:
-* None
+* [27526] Added workaround for Ruby 1.9.1 bug which caused a stack trace to be dumped during exception processing when a bad filename or directory name was encountered.
 
 === Release 0.3.1:
 Features
