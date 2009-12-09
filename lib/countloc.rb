@@ -289,7 +289,7 @@ module CountLOC
       begin
         File.open(@filename, "wb") { |file| file.puts data.to_csv }
       rescue 
-        puts "Error: " + $!
+        puts "Error: " + $!.to_s
       end    
     end
 
@@ -310,7 +310,7 @@ module CountLOC
       begin
         File.open(@filename, "w") { |file| file.puts data.to_html }
       rescue 
-        puts "Error: " + $!
+        puts "Error: " + $!.to_s
       end    
     end
 
@@ -366,7 +366,7 @@ module CountLOC
           results << counter
         end
       rescue
-        puts "Error: " + $!
+        puts "Error: " + $!.to_s
       end
     end
 
@@ -443,7 +443,7 @@ if $0 == __FILE__
         end.parse!(args)
 
       rescue
-        puts "Error: " + $!
+        puts "Error: " + $!.to_s
         exit
       end
 
