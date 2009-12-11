@@ -11,7 +11,7 @@ class CppTest < Test::Unit::TestCase
 
   def setup
     @counter = LineCounter.new('Test')
-    @style = :cplusplus
+    @style = :cpp
   end
   
   def test_single_line_comment
