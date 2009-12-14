@@ -1,0 +1,123 @@
+#!/usr/bin/ruby
+#
+# = countloc - Ruby line counter.
+#
+# Copyright (C) 2009  Stephen Doyle
+#
+# == Features
+# countloc currently supports generating LOC metrics for source 
+# code of various languages.
+#
+# == Download
+# The latest countloc release can be downloaded from RubyForge: 
+# http://rubyforge.org/frs/?group_id=7555&release_id=29931
+#
+# == Example
+# * countloc --help
+# * countloc some_file.rb
+# * countloc -r .
+#
+
+require 'countloc'
+
+class CmdLineOptParser
+
+  def self.usage 
+    "Usage: #{File.basename($0)} [-h|--help] [options] <file> ... <file>"
+  end
+
+  #
+  # Return a structure describing the options
+  #
+  def self.parse(args)
+    # The options set on the command line will be collected in "options"
+    # Setup the defaults here
+    options = {}
+    options[:recurse] = false
+    options[:quiet] = false
+    options[:mode] = :ruby
+    options[:defaultMode] = true
+    options[:csv] = false
+    options[:csvFilename] = 'countloc.csv'
+    options[:html] = false
+    options[:htmlFilename] = 'countloc.html'
+    options[:useUserFileTypes] = false
+      
+    begin
+      OptionParser.new do |opts|
+        opts.banner = usage
+
+        opts.on('-r', '--recurse', 'Recurse into subdirectories') do
+          options[:recurse] = true
+        end
+
+        opts.on('-v', '--version', 'Display version number') do 
+          puts "#{File.basename($0)}, version: #{CountLOC::VERSION}"
+          exit
+        end
+
+        opts.on('-q', '--quiet', "Don't write results to stdout") do 
+          options[:quiet] = true
+        end
+
+        opts.on('-m', '--mode mode', 
+          [:ruby, :python, :c, :cpp, :csharp, :java, :vb], 
+          "Set the language mode.", 
+          "All languages are used by default",
+          "if the mode option is omitted.",
+          "Supported modes: ",
+          "  ruby, python,", 
+          "  c, cpp, csharp,", 
+          "  java, vb") do |mode|
+          options[:mode] = mode
+          options[:defaultMode] = false
+        end
+
+        opts.on('--csv csvFilename', 'Generate csv file') do |csvFilename|
+          options[:csvFilename] = csvFilename
+          options[:csv] = true
+        end
+
+        opts.on('--html htmlFilename', 'Generate html file') do |htmlFilename|
+          options[:htmlFilename] = htmlFilename
+          options[:html] = true
+        end
+
+        opts.on('--file-types fileTypes', 
+          "File types to be included.",
+          "Default is dependant upon language mode:",
+          "  ruby: *.rb",
+          "  python: *.py",
+          "  c: *.h, *.c",
+          "  cpp: *.h, *.hpp, *.cpp, *.c, *.inl",
+          "  csharp: *.cs",
+          "  java: *.java",
+          "  vb: *.vb",
+          "Defaults are overridden using this option.") do |fileTypes|
+          options[:fileTypes] = fileTypes.split()
+          options[:useUserFileTypes] = true
+        end
+
+        opts.on_tail('-h', '--help', 'Display this help and exit') do
+          puts opts
+          exit
+        end
+
+      end.parse!(args)
+
+    rescue
+      puts "Error: " + $!.to_s
+      exit
+    end
+
+    options
+  end # parse()
+end # class CmdLineOptParser
+
+options = CmdLineOptParser.parse(ARGV)
+if ARGV.length < 1
+  puts CmdLineOptParser.usage
+  exit
+end
+
+CountLOC.countloc(ARGV, options)

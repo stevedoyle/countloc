@@ -55,11 +55,12 @@ gem_spec = Gem::Specification.new do |s|
   s.homepage = %q{http://countloc.rubyforge.org/}
   s.description = %q{LOC metrics generation script implementation in Ruby.}
   s.files = [ "README", "LICENSE", "setup.rb"] + Dir['lib/**/*.rb'] + 
-    Dir['test/**/*.rb'] + Dir['examples/**/*.rb']
+    Dir['bin/countloc'] + Dir['test/**/*.rb'] + Dir['examples/**/*.rb']
   s.rdoc_options << '--title' << 'CountLOC Documentation'
   s.require_paths << 'lib'
   s.rubyforge_project = PROJECT
   s.test_file = "test/ts_countloc.rb"
+  s.executables = %q{countloc}
 end
 
 Rake::GemPackageTask.new(gem_spec) do |pkg|

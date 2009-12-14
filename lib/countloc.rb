@@ -5,22 +5,17 @@
 # Copyright (C) 2008  Stephen Doyle
 #
 # == Features
-# countloc.rb currently supports generating LOC metrics for Ruby source code.
-#
-# The following commenting styles are supported:
-# * Single line comments - starting from a # until the end of the line.
-# * Multi-line comments - between "=begin" and "=end" tags.
+# countloc.rb generates LOC metrics for a variety of programming languages.
 #
 # == Download
 # The latest countloc release can be downloaded from RubyForge: 
 # http://rubyforge.org/frs/?group_id=7555&release_id=29931
 #
 # == Example
-# * countloc.rb --help
-# * countloc.rb some_file.rb
-# * countloc.rb -r .
+# * countloc --help
+# * countloc some_file.rb
+# * countloc -r .
 #
-
 
 require 'optparse'
 require 'time'
@@ -31,7 +26,7 @@ require 'time'
 #
 module CountLOC
 
-  VERSION = '0.3.1'
+  VERSION = '0.3.2'
 
   DEFAULT_FILE_TYPES = {
       :ruby   => [".rb"],
