@@ -369,6 +369,7 @@ module CountLOC
       options[:fileTypes].each do |fileType|
         files += dirs.collect { |dirname| Dir.glob(File.join(dirname, recursePattern, '*'+fileType))}.flatten      
       end
+      files.uniq!
     end
 
     # Sum will keep the running total

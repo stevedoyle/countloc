@@ -71,11 +71,13 @@ Features
 * Added VB support via patch posted on Rubyforge
 * Added mode option to simplify the selection of source code language.
 * By default all known file types will be processed with language selected based on file type.
+* Installers now install an executable - countloc
 
 Bugfixes:
 * [27526] Added workaround for Ruby 1.9.1 bug which caused a stack trace to be dumped during exception processing when a bad filename or directory name was encountered.
 * [27527] Improved help text.
 * [27528] Improved handling of non-ruby source files.
+* [27565] Fixed error where files are duplicated when a directory is specified as an argument.
 
 === Release 0.3.1:
 Features
