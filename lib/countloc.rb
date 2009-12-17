@@ -5,22 +5,17 @@
 # Copyright (C) 2008  Stephen Doyle
 #
 # == Features
-# countloc.rb currently supports generating LOC metrics for Ruby source code.
-#
-# The following commenting styles are supported:
-# * Single line comments - starting from a # until the end of the line.
-# * Multi-line comments - between "=begin" and "=end" tags.
+# countloc.rb generates LOC metrics for a variety of programming languages.
 #
 # == Download
 # The latest countloc release can be downloaded from RubyForge: 
 # http://rubyforge.org/frs/?group_id=7555&release_id=29931
 #
 # == Example
-# * countloc.rb --help
-# * countloc.rb some_file.rb
-# * countloc.rb -r .
+# * countloc --help
+# * countloc some_file.rb
+# * countloc -r .
 #
-
 
 require 'optparse'
 require 'time'
@@ -31,7 +26,36 @@ require 'time'
 #
 module CountLOC
 
-  VERSION = '0.3.0'
+  VERSION = '0.4.0'
+
+  DEFAULT_FILE_TYPES = {
+      :ruby   => [".rb"],
+      :python => [".py"],
+      :c      => [".h", ".c"],
+      :cpp    => [".h", ".hpp", ".cpp", ".c", ".cc", ".inl"],
+      :csharp => [".cs"],
+      :java   => [".java"],
+      :vb     => [".vb"]
+  }
+
+  DEFAULT_STYLE = {
+    ".rb"   => :ruby,
+    ".py"   => :python,
+    ".h"    => :cpp,
+    ".c"    => :cpp,
+    ".hpp"  => :cpp,
+    ".cpp"  => :cpp,
+    ".cc"   => :cpp,
+    ".inl"  => :cpp,
+    ".cs"   => :csharp,
+    ".java" => :java,
+    ".vb"   => :vb
+  }
+
+  # Get the supported style for a given filename
+  def getStyle(filename)
+    DEFAULT_FILE_TYPES.invert[File.extname(filename)]
+  end
 
   # Class that gathers the metrics. 
   # 
@@ -42,33 +66,48 @@ module CountLOC
     attr_reader :name
     attr_accessor :code, :comments, :blank, :lines
 
-    COMMENT_PATTERNS = {
-      :ruby => {
-        :single_line_full => /^\s*#/,
-        :single_line_mixed => /#/,
-        :multiline_begin => /=begin(\s|$)/,
-        :multiline_end => /=end(\s|$)/,
-        :blank_line => /^\s*$/
-      },
+    def comment_patterns(style)
+      patterns = {
+        :ruby => {
+          :single_line_full => /^\s*#/,
+          :single_line_mixed => /#/,
+          :multiline_begin => /=begin(\s|$)/,
+          :multiline_end => /=end(\s|$)/,
+          :blank_line => /^\s*$/
+        },
       
-      :python => {
-        :single_line_full => /^\s*#/,
-        :single_line_mixed => /#/,
-        :multiline_begin => /^\s*"""/,
-        :multiline_end => /"""/,
-        :blank_line => /^\s*$/
-      },
+        :vb => {
+          :single_line_full => /^\s*\'/,
+          :single_line_mixed => /\'/,
+          :multiline_begin => /=begin(\s|$)/, # No VB multi-line comment
+          :multiline_end => /=end(\s|$)/,     # No VB multi-line comment
+          :blank_line => /^\s*$/
+        },
 
-      :cplusplus => {
-        :single_line_full => /^\s*\/\//,
-        :single_line_mixed => /\/\//,
-        :multiline_begin => /\/\*/,
-        :multiline_end => /\*\/\s*$/,
-        :multiline_begin_mixed => /^[^\s]+.*\/\*/,
-        :multiline_end_mixed => /\*\/\s*[^\s]+$/,
-        :blank_line => /^\s*$/
+        :python => {
+          :single_line_full => /^\s*#/,
+          :single_line_mixed => /#/,
+          :multiline_begin => /^\s*"""/,
+          :multiline_end => /"""/,
+          :blank_line => /^\s*$/
+        },
+
+        :cpp => {                           # C++ 
+          :single_line_full => /^\s*\/\//,
+          :single_line_mixed => /\/\//,
+          :multiline_begin => /\/\*/,
+          :multiline_end => /\*\/\s*$/,
+          :multiline_begin_mixed => /^[^\s]+.*\/\*/,
+          :multiline_end_mixed => /\*\/\s*[^\s]+$/,
+          :blank_line => /^\s*$/
+        }
       }
-    }
+      patterns[:c] = patterns[:cpp]
+      patterns[:csharp] = patterns[:cpp]
+      patterns[:java] = patterns[:cpp]
+      
+      patterns[style]
+    end
 
     LINE_FORMAT = '%8s %8s %8s %8s %12s    %s'
 
@@ -85,23 +124,6 @@ module CountLOC
     #
     def self.columnNames
       self.headline.split(' ', 6)
-    end
-    
-    #
-    # Retrieve the commenting style that should be used for the given 
-    # file type.
-    #
-    def self.commentStyle(ext)
-      { ".rb"   => :ruby,
-        ".py"   => :python,
-        ".c"    => :cplusplus,
-        ".cpp"  => :cplusplus,
-        ".cc"   => :cplusplus,
-        ".cs"   => :cplusplus,
-        ".h"    => :cplusplus,
-        ".hpp"  => :cplusplus,
-        ".java" => :cplusplus
-      }[ext]
     end
     
     def initialize(name)
@@ -125,11 +147,11 @@ module CountLOC
         # strings or regular expressions.
         line.gsub!(/\'.*?\'/, "X")  # Single quoted string
         line.gsub!(/[^\"]\"[^\"]+\"/, "X")  # Double quoted string
-        if style == :ruby:
+        if style == :ruby
           line.gsub!(/\/.*?\//, "X")  # Regular expression
         end
 
-        patterns = COMMENT_PATTERNS[style]
+        patterns = comment_patterns(style)
         
         # In the event where the multiline_end pattern is the same as the 
         # multiline_begin pattern, it is necessary to check for the ending
@@ -280,7 +302,7 @@ module CountLOC
       begin
         File.open(@filename, "wb") { |file| file.puts data.to_csv }
       rescue 
-        puts "Error: " + $!
+        puts "Error: " + $!.to_s
       end    
     end
 
@@ -301,7 +323,7 @@ module CountLOC
       begin
         File.open(@filename, "w") { |file| file.puts data.to_html }
       rescue 
-        puts "Error: " + $!
+        puts "Error: " + $!.to_s
       end    
     end
 
@@ -316,15 +338,23 @@ module CountLOC
   # * :html - write the results to a html file. Default = false.
   # * :htmlFilename - name of html file to generate. Used with :html option. Default = countloc.html  
   # * :quiet - do not output results to stdout
-  # * :fileTypes - Types of file to include in the LOC analysis. Used for filtering files
-  #   in recursive analysis and to specify languages other than Ruby. Default = *.rb
+  # * :mode - language mode. Determines parsing rules and default file types. 
+  #   Supported modes: ruby, python, c, cpp, csharp, java, vb.
+  #   If no mode is selected, the default mode is to select the parsing rules based on 
+  #   file extension. A default set of file extensions covering all supported languages
+  #   will be used.
+  # * :fileTypes - Types of file to include in the LOC analysis. By default the file types
+  #   used are based on the language mode selected. This option can be used to override
+  #   the default file types.
   def countloc(files, options = {})
-
+    
     # Setup defaults for filenames
-    options[:fileTypes] = ["*.rb"] if not options.include?(:fileTypes)
-    options[:csvFilename] = "countloc.csv" if not options.include?(:csvFilename)
-    options[:htmlFilename] = "countloc.html" if not options.include?(:htmlFilename)
-
+    if options[:defaultMode]
+      options[:fileTypes] = DEFAULT_FILE_TYPES.values.flatten if not options[:useUserFileTypes]      
+    else
+      options[:fileTypes] = DEFAULT_FILE_TYPES[options[:mode]] if not options[:useUserFileTypes]
+    end
+    
     # Setup the output writers based on the options
     writers = []
     writers << ConsoleWriter.new if not options[:quiet]
@@ -337,8 +367,9 @@ module CountLOC
       recursePattern = ("**" if options[:recurse]) || ""
       files -= dirs
       options[:fileTypes].each do |fileType|
-        files += dirs.collect { |dirname| Dir.glob(File.join(dirname, recursePattern, fileType))}.flatten      
+        files += dirs.collect { |dirname| Dir.glob(File.join(dirname, recursePattern, '*'+fileType))}.flatten      
       end
+      files.uniq!
     end
 
     # Sum will keep the running total
@@ -350,14 +381,18 @@ module CountLOC
     # Generate metrics for each file
     files.each do |filename|
       begin
-        File.open(filename) do |file|
+          File.open(filename) do |file|
           counter = LineCounter.new(filename)
-          counter.read(file, LineCounter.commentStyle(File.extname(filename)))
+          mode = options[:mode]
+          if options[:defaultMode]
+            mode = DEFAULT_STYLE[File.extname(filename)] || options[:mode]
+          end
+          counter.read(file, mode)
           sum += counter
           results << counter
         end
       rescue
-        puts "Error: " + $!
+        puts "Error: " + $!.to_s
       end
     end
 
@@ -377,7 +412,7 @@ end # module
 #
 # When run as a standalone script ...
 #
-if $0 == __FILE__:
+if $0 == __FILE__
 
   class CmdLineOptParser
 
@@ -392,6 +427,15 @@ if $0 == __FILE__:
       # The options set on the command line will be collected in "options"
       # Setup the defaults here
       options = {}
+      options[:recurse] = false
+      options[:quiet] = false
+      options[:mode] = :ruby
+      options[:defaultMode] = true
+      options[:csv] = false
+      options[:csvFilename] = 'countloc.csv'
+      options[:html] = false
+      options[:htmlFilename] = 'countloc.html'
+      options[:useUserFileTypes] = false
       
       begin
         OptionParser.new do |opts|
@@ -402,12 +446,25 @@ if $0 == __FILE__:
           end
 
           opts.on('-v', '--version', 'Display version number') do 
-            puts "#{File.basename($0)}, version: #{VERSION}"
+            puts "#{File.basename($0)}, version: #{CountLOC::VERSION}"
             exit
           end
 
           opts.on('-q', '--quiet', "Don't write results to stdout") do 
             options[:quiet] = true
+          end
+
+          opts.on('-m', '--mode mode', 
+            [:ruby, :python, :c, :cpp, :csharp, :java, :vb], 
+            "Set the language mode.", 
+            "All languages are used by default",
+            "if the mode option is omitted.",
+            "Supported modes: ",
+            "  ruby, python,", 
+            "  c, cpp, csharp,", 
+            " java, vb") do |mode|
+            options[:mode] = mode
+            options[:defaultMode] = false
           end
 
           opts.on('--csv csvFilename', 'Generate csv file') do |csvFilename|
@@ -422,8 +479,17 @@ if $0 == __FILE__:
 
           opts.on('--file-types fileTypes', 
             "File types to be included.",
-            "Default = *.rb") do |fileTypes|
+            "Default is dependant upon language mode:",
+            "  ruby: *.rb",
+            "  python: *.py",
+            "  c: *.h, *.c",
+            "  cpp: *.h, *.hpp, *.cpp, *.c, *.inl",
+            "  csharp: *.cs",
+            "  java: *.java",
+            "  vb: *.vb",
+            "Defaults are overridden using this option.") do |fileTypes|
             options[:fileTypes] = fileTypes.split()
+            options[:useUserFileTypes] = true
           end
 
           opts.on_tail('-h', '--help', 'Display this help and exit') do
@@ -434,7 +500,7 @@ if $0 == __FILE__:
         end.parse!(args)
 
       rescue
-        puts "Error: " + $!
+        puts "Error: " + $!.to_s
         exit
       end
 

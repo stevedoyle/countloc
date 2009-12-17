@@ -8,6 +8,10 @@
 # the GNU LGPL, Lesser General Public License version 2.1.
 #
 
+require 'rubygems'
+require 'fileutils'
+require 'tmpdir'
+
 unless Enumerable.method_defined?(:map)   # Ruby 1.4.6
   module Enumerable
     alias map collect
@@ -1344,6 +1348,9 @@ class Installer
 
   def install_dir_bin(rel)
     install_files targetfiles(), "#{config('bindir')}/#{rel}", 0755
+    
+    return unless Gem.win_platform?
+    install_bat_files targetfiles(), "#{config('bindir')}/#{rel}", 0755
   end
 
   def install_dir_lib(rel)
@@ -1375,6 +1382,30 @@ class Installer
     mkdir_p dest, @config.install_prefix
     list.each do |fname|
       install fname, dest, mode, @config.install_prefix
+    end
+  end
+
+  def install_bat_files(list, dest, mode)
+    mkdir_p dest, @config.install_prefix
+    list.each do |bin_file|
+      begin
+        bin_cmd_file = File.join Dir.tmpdir, "#{bin_file}.bat"
+
+        File.open bin_cmd_file, 'w' do |file|
+          file.puts <<-TEXT
+@ECHO OFF
+IF NOT "%~f0" == "~f0" GOTO :WinNT
+@"#{Gem.ruby}" "#{bin_file}" %1 %2 %3 %4 %5 %6 %7 %8 %9
+GOTO :EOF
+:WinNT
+"%~d0%~p0ruby.exe" "%~d0%~p0%~n0" %*
+TEXT
+        end
+
+        install bin_cmd_file, dest, mode, @config.install_prefix
+      ensure
+        FileUtils.rm bin_cmd_file
+      end      
     end
   end
 
