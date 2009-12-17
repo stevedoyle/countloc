@@ -26,7 +26,7 @@ require 'time'
 #
 module CountLOC
 
-  VERSION = '0.3.2'
+  VERSION = '0.4.0'
 
   DEFAULT_FILE_TYPES = {
       :ruby   => [".rb"],

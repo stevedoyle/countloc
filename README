@@ -17,6 +17,8 @@ Python, C, C++, C#, Java, Perl, etc. ...
 == Download
 The latest release can be downloaded from: http://rubyforge.org/projects/countloc/
 
+The latest release can also be installed from the Gem Cutter repository at: http://gemcutter.org/gems/countloc
+
 == Installation
 CountLOC is packaged as a Ruby gem and as a .zip file. 
 
@@ -62,7 +64,7 @@ To get LOC metrics for a C file:
 	% countloc.rb hello.c
 	
 To get LOC metrics for all C files in a directory tree:
-	% countloc.rb -r --file-types "*.c *.h"
+	% countloc.rb -r -m c .
 	
 
 == Release Notes
